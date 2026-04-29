@@ -1,0 +1,25 @@
+services:
+  kylin-desktop-v10sp1-downloader:
+    build:
+      context: ./kylin-desktop-v10sp1
+    image: kylin-desktop-v10sp1-downloader:latest
+    container_name: kylin-desktop-v10sp1-downloader
+    platform: linux/amd64
+    volumes:
+      - ./output/kylin-desktop-v10sp1:/downloads
+    command: ["sleep", "infinity"]
+
+  uos-desktop-20-pro-downloader:
+    build:
+      context: ./uos-desktop-20-pro
+    image: uos-desktop-20-pro-downloader:latest
+    container_name: uos-desktop-20-pro-downloader
+    platform: linux/amd64
+    volumes:
+      - ./output/uos-desktop-20-pro:/downloads
+      # 挂载授权目录（注意：是目录，不是单文件）
+      # entrypoint 会检测里面是否有 uos.conf：
+      #   有 → 完整模式，能下 UOS 桌面专有包 + 通用包
+      #   无 → 兜底模式，只下通用包
+      - ./uos-desktop-20-pro/uos-auth:/host-uos-auth:ro
+    # entrypoint 已在 Dockerfile 设置；compose 不需要额外写 entrypoint/command

@@ -1,0 +1,10 @@
+# 兜底模式：仅 Debian 10 buster archive
+#
+# 容器 entrypoint 在「未挂载授权文件」或 download.sh 检测到「UOS 源返回 401」
+# 时，会把本文件拷到 /etc/apt/sources.list 启用此模式 ——
+# 此时只能下载通用包（nginx / curl / python / openssl 等），
+# UOS 桌面专有包（dde-* / deepin-* / uos-*）会因找不到而下载失败。
+
+deb [arch=amd64,arm64] http://archive.debian.org/debian buster main contrib non-free
+deb [arch=amd64,arm64] http://archive.debian.org/debian buster-backports main contrib non-free
+deb [arch=amd64,arm64] http://archive.debian.org/debian-security buster/updates main contrib non-free

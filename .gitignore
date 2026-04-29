@@ -1,0 +1,6 @@
+# 不要提交 UOS 授权凭据（含本机硬件指纹）
+uos-desktop-20-pro/uos-auth/uos.conf
+uos-desktop-20-pro/uos-auth/*.conf
+
+# 下载产物
+output/

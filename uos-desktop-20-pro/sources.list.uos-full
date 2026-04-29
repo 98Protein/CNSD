@@ -1,0 +1,18 @@
+# 完整模式：UOS 桌面专业版官方源 + Debian buster archive 兜底
+#
+# 容器 entrypoint 在检测到挂载的授权文件时，会把本文件拷到
+# /etc/apt/sources.list 启用此模式 —— 既能下载 UOS 桌面专有包
+# (dde-* / deepin-* / uos-*)，也能下载通用包（nginx / curl 等）。
+
+# UOS 桌面专业版主仓库（含桌面专有组件，需授权访问）
+deb [arch=amd64,arm64] https://professional-packages.chinauos.com/desktop-professional eagle main contrib non-free
+
+# UOS 应用商店仓库（含商业重分发应用）
+deb [arch=amd64,arm64] https://professional-store-packages.chinauos.com/appstore eagle appstore
+
+# UOS 打印机驱动仓库
+deb [arch=amd64,arm64] https://professional-packages.chinauos.com/printer eagle non-free
+
+# Debian 10 buster archive 兜底（无授权要求；用于 UOS 仓库未覆盖的通用包）
+deb [arch=amd64,arm64] http://archive.debian.org/debian buster main contrib non-free
+deb [arch=amd64,arm64] http://archive.debian.org/debian-security buster/updates main contrib non-free

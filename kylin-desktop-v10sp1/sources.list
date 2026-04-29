@@ -1,0 +1,15 @@
+# 银河麒麟桌面操作系统 V10 SP1 官方 apt 源
+#
+# 麒麟桌面源按架构分仓库（不像 Debian 主线那样一个 URL 多架构），
+# 所以这里用两条独立的 deb 行：
+#   - amd64 行 → 拉 amd64 包
+#   - arm64 行 → 拉 arm64 包
+#
+# [trusted=yes] 跳过 GPG 签名校验，离线下载场景这样最简单；如需校验，
+# 改为 [arch=...] 单独写 arch，并在 Dockerfile 里手工导入麒麟 GPG 公钥。
+
+deb [trusted=yes arch=amd64] http://archive2.kylinos.cn/deb/kylin/production/KY-V10-SP1-amd64/custom/kylin-desktop/V10-SP1-amd64 10.1 main restricted universe multiverse
+deb [trusted=yes arch=arm64] http://archive2.kylinos.cn/deb/kylin/production/KY-V10-SP1-arm64/custom/kylin-desktop/V10-SP1-arm64 10.1 main restricted universe multiverse
+
+# KYLIN-ALL 是公开的入口仓库（包含一些通用更新），双架构都能从这里拉补丁
+deb [trusted=yes] http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
