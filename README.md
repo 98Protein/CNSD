@@ -81,7 +81,7 @@ UOS 桌面专业版的官方源 `professional-packages.chinauos.com` 需要授�
 ## 启动
 
 ```bash
-git clone git@github.com:98Protein/CNSD.git
+git clone https://github.com/98Protein/CNSD.git
 cd CNSD
 # 可选：把 UOS 授权文件放到 uos-desktop-20-pro/uos-auth 目录下
 #      不放也行，只是 UOS 容器会直接进入兜底模式（只下载通用包）

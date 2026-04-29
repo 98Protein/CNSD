@@ -17,10 +17,11 @@ FROM debian:10-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Debian 10 (buster) 已 EOL，archive 不再更新签名时间戳，关闭 Valid-Until 校验
-RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+# Debian 10 (buster) 已 EOL，切换到 archive 源并关闭 Valid-Until 校验
+RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until \
+    && echo 'deb http://archive.debian.org/debian buster main contrib non-free\ndeb http://archive.debian.org/debian-security buster/updates main contrib non-free' > /etc/apt/sources.list
 
-# 先用容器自带的 Debian 默认源装基础工具（这一步在 sources.list 还没换前完成）
+# 先用 archive 源装基础工具
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
