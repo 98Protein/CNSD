@@ -30,6 +30,7 @@ CNSD/
 │   ├── sources.list.debian-only        # 兜底模式模板（仅 Debian buster）
 │   ├── uos-os-version                  # UOS 桌面身份铭牌
 │   ├── uos-auth/
+│   │   ├── README.md                   # UOS 授权文件导出教程
 │   │   └── uos.conf                    # UOS 授权文件，不放也能跑
 │   └── download.sh                     # 双架构包下载脚本，授权 401 切换兜底模式
 ├── docker-compose.yml
@@ -80,7 +81,7 @@ UOS 桌面专业版的官方源 `professional-packages.chinauos.com` 需要授�
 ## 启动
 
 ```bash
-git clone 
+git clone git@github.com:98Protein/CNSD.git
 cd CNSD
 # 可选：把 UOS 授权文件放到 uos-desktop-20-pro/uos-auth 目录下
 #      不放也行，只是 UOS 容器会直接进入兜底模式（只下载通用包）
