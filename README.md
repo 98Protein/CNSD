@@ -46,7 +46,7 @@ CNSD/
 
 ### 基础镜像选择
 
-两个目标系统都没有公开的 ==桌面版== Docker 基础镜像，所以用「等价 Linux 发行版作为基础镜像 + 各自官方源」模拟：
+两个目标系统都没有公开的 **桌面版** Docker 基础镜像，所以用「等价 Linux 发行版作为基础镜像 + 各自官方源」模拟：
 
 - 银河麒麟桌面 V10 SP1 基于 Ubuntu 20.04 (focal)，`glibc>=2.31` `linux kernel>=5.4` 。
 - UOS 桌面专业版 V20 基于 Debian 10 buster，`glibc>=2.28` `linux kernel>=4.19`。

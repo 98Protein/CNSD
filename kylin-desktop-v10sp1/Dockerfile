@@ -15,20 +15,20 @@ FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 替换为麒麟官方 apt 源
-RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list
-COPY sources.list /etc/apt/sources.list
-
-# 启用 arm64 多架构支持
-RUN dpkg --add-architecture arm64
-
-# 安装下载所需的最少工具集
+# 先用 Ubuntu 默认源装基础工具，再换麒麟源
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         apt-utils \
         dpkg-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# 替换为麒麟官方 apt 源
+RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+COPY sources.list /etc/apt/sources.list
+
+# 启用 arm64 多架构支持
+RUN dpkg --add-architecture arm64
 
 # 拷入下载脚本
 COPY download.sh /usr/local/bin/download.sh
