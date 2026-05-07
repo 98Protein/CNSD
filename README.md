@@ -103,6 +103,9 @@ docker logs uos-desktop-20-pro-downloader | head -10
 ```bash
 # 下载包及其全部依赖
 docker exec -it <docker name> download.sh <package> <arch>
+
+# 仅下载指定包本身，不解析依赖
+docker exec -it <docker name> download.sh <package> <arch> <subdir> --no-deps
 ```
 
 ### 银河麒麟桌面 V10 SP1（无需授权）
@@ -111,6 +114,9 @@ docker exec -it <docker name> download.sh <package> <arch>
 docker exec -it kylin-desktop-v10sp1-downloader download.sh nginx amd64
 docker exec -it kylin-desktop-v10sp1-downloader download.sh nginx arm64
 docker exec -it kylin-desktop-v10sp1-downloader download.sh ukui-control-center,ukui-panel arm64 ukui-arm
+
+# 仅下载单个包
+docker exec -it kylin-desktop-v10sp1-downloader download.sh libssl3 amd64 libssl3 --no-deps
 ```
 
 ### 统信 UOS 桌面专业版 V20
@@ -121,6 +127,9 @@ docker exec -it kylin-desktop-v10sp1-downloader download.sh ukui-control-center,
 docker exec -it uos-desktop-20-pro-downloader download.sh nginx amd64
 docker exec -it uos-desktop-20-pro-downloader download.sh nginx arm64
 docker exec -it uos-desktop-20-pro-downloader download.sh curl,wget,vim arm64 cli-tools-arm
+
+# 仅下载单个包
+docker exec -it uos-desktop-20-pro-downloader download.sh libssl3 amd64 libssl3 --no-deps
 ```
 
 **UOS 桌面专有包（需授权才能下）：**

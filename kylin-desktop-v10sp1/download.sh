@@ -2,13 +2,15 @@
 # ----------------------------------------------------------------------------
 # 银河麒麟桌面 V10 SP1 多架构 DEB 包下载脚本
 #
-#   用法:  download.sh <package[,pkg2,...]> [arch] [output_subdir]
-#     arch: amd64 (默认) | arm64
+#   用法:  download.sh <package[,pkg2,...]> [arch] [output_subdir] [--no-deps]
+#     arch:      amd64 (默认) | arm64
+#     --no-deps: 仅下载指定包本身，不解析依赖
 #
 #   示例:
 #     download.sh nginx amd64
 #     download.sh nginx arm64
 #     download.sh curl,wget,vim arm64 cli-tools-arm
+#     download.sh libssl3 amd64 libssl3 --no-deps
 #
 # 关键点:
 #   1. 用 apt-cache depends --recurse 解析指定架构完整依赖树。
@@ -21,15 +23,19 @@ set -u
 PACKAGES_RAW="${1:-}"
 ARCH="${2:-amd64}"
 SUBDIR="${3:-}"
+NO_DEPS=false
+for arg in "$@"; do [ "$arg" = "--no-deps" ] && NO_DEPS=true; done
 
 if [ -z "$PACKAGES_RAW" ]; then
     cat <<EOF
-用法: $0 <package[,pkg2,...]> [arch] [output_subdir]
-  arch: amd64 (默认) | arm64
+用法: $0 <package[,pkg2,...]> [arch] [output_subdir] [--no-deps]
+  arch:      amd64 (默认) | arm64
+  --no-deps: 仅下载指定包本身，不解析依赖
 示例:
   $0 nginx amd64
   $0 nginx arm64
   $0 curl,wget,vim arm64 cli-tools-arm
+  $0 libssl3 amd64 libssl3 --no-deps
 EOF
     exit 1
 fi
@@ -57,36 +63,47 @@ cd "$OUTPUT_DIR" || exit 1
 echo "==> 更新软件源索引..."
 apt-get update -qq
 
-echo "==> 解析依赖（架构: ${ARCH}，目标: ${PACKAGES[*]}）..."
-{
-    for pkg in "${PACKAGES[@]}"; do
-        apt-cache depends \
-            --recurse \
-            --no-recommends --no-suggests \
-            --no-conflicts --no-breaks \
-            --no-replaces --no-enhances \
-            "${pkg}:${ARCH}" 2>/dev/null \
-        | awk '/^[a-zA-Z0-9]/ {print $1}'
-    done
-} | sort -u > "$DEP_LIST"
+if $NO_DEPS; then
+    echo "==> 模式: 仅下载指定包（跳过依赖解析）..."
+    printf '%s\n' "${PACKAGES[@]}" > "$DEP_LIST"
+else
+    echo "==> 解析依赖（架构: ${ARCH}，目标: ${PACKAGES[*]}）..."
+    {
+        for pkg in "${PACKAGES[@]}"; do
+            apt-cache depends \
+                --recurse \
+                --no-recommends --no-suggests \
+                --no-conflicts --no-breaks \
+                --no-replaces --no-enhances \
+                "${pkg}:${ARCH}" 2>/dev/null \
+            | awk '/^[a-zA-Z0-9]/ {print $1}'
+        done
+    } | sort -u > "$DEP_LIST"
+fi
 
 DEP_COUNT=$(wc -l < "$DEP_LIST")
 echo "==> 共解析出 ${DEP_COUNT} 个包，开始下载..."
 
 SUCCESS=0
 FAILED=0
+CURRENT=0
 while read -r dep; do
     [ -z "$dep" ] && continue
+    CURRENT=$((CURRENT + 1))
+    PERCENT=$((CURRENT * 100 / DEP_COUNT))
+    FILLED=$((PERCENT / 2))
+    BAR=$(printf '%0.s#' $(seq 1 $FILLED))$(printf '%0.s-' $(seq 1 $((50 - FILLED))))
+    printf "\r  [%s] %3d%% (%d/%d) 正在下载: %-40s" "$BAR" "$PERCENT" "$CURRENT" "$DEP_COUNT" "$dep"
     if apt-get download "${dep}:${ARCH}" >/dev/null 2>&1; then
         SUCCESS=$((SUCCESS + 1))
     elif apt-get download "${dep}" >/dev/null 2>&1; then
-        # 处理 architecture: all 的包
         SUCCESS=$((SUCCESS + 1))
     else
         echo "$dep" >> "$FAILED_LOG"
         FAILED=$((FAILED + 1))
     fi
 done < "$DEP_LIST"
+echo
 
 echo
 echo "==================== 下载完成 ===================="

@@ -2,8 +2,9 @@
 # ----------------------------------------------------------------------------
 # 统信 UOS 桌面专业版 V20 多架构 DEB 包下载脚本（带授权降级）
 #
-#   用法:  download.sh <package[,pkg2,...]> [arch] [output_subdir]
-#     arch: amd64 (默认) | arm64
+#   用法:  download.sh <package[,pkg2,...]> [arch] [output_subdir] [--no-deps]
+#     arch:      amd64 (默认) | arm64
+#     --no-deps: 仅下载指定包本身，不解析依赖
 #
 # 行为:
 #   1. apt-get update 时若 UOS 源返回 401（授权被拒），自动切到兜底模式
@@ -16,15 +17,19 @@ set -u
 PACKAGES_RAW="${1:-}"
 ARCH="${2:-amd64}"
 SUBDIR="${3:-}"
+NO_DEPS=false
+for arg in "$@"; do [ "$arg" = "--no-deps" ] && NO_DEPS=true; done
 
 if [ -z "$PACKAGES_RAW" ]; then
     cat <<EOF
-用法: $0 <package[,pkg2,...]> [arch] [output_subdir]
-  arch: amd64 (默认) | arm64
+用法: $0 <package[,pkg2,...]> [arch] [output_subdir] [--no-deps]
+  arch:      amd64 (默认) | arm64
+  --no-deps: 仅下载指定包本身，不解析依赖
 示例:
   $0 dde-control-center amd64           # UOS 专有包 (需授权)
   $0 deepin-terminal arm64              # arm64 专有包
   $0 nginx,curl,wget arm64 cli-tools    # 通用包，多包，自定义子目录
+  $0 libssl3 amd64 libssl3 --no-deps    # 仅下载单包
 EOF
     exit 1
 fi
@@ -75,18 +80,23 @@ if [ "$MODE" = "full" ] && grep -q '401' "$APT_LOG"; then
 fi
 
 # ---------- 2. 解析依赖 ----------
-echo "==> 解析依赖（架构: ${ARCH}，目标: ${PACKAGES[*]}）..."
-{
-    for pkg in "${PACKAGES[@]}"; do
-        apt-cache depends \
-            --recurse \
-            --no-recommends --no-suggests \
-            --no-conflicts --no-breaks \
-            --no-replaces --no-enhances \
-            "${pkg}:${ARCH}" 2>/dev/null \
-        | awk '/^[a-zA-Z0-9]/ {print $1}'
-    done
-} | sort -u > "$DEP_LIST"
+if $NO_DEPS; then
+    echo "==> 模式: 仅下载指定包（跳过依赖解析）..."
+    printf '%s\n' "${PACKAGES[@]}" > "$DEP_LIST"
+else
+    echo "==> 解析依赖（架构: ${ARCH}，目标: ${PACKAGES[*]}）..."
+    {
+        for pkg in "${PACKAGES[@]}"; do
+            apt-cache depends \
+                --recurse \
+                --no-recommends --no-suggests \
+                --no-conflicts --no-breaks \
+                --no-replaces --no-enhances \
+                "${pkg}:${ARCH}" 2>/dev/null \
+            | awk '/^[a-zA-Z0-9]/ {print $1}'
+        done
+    } | sort -u > "$DEP_LIST"
+fi
 
 DEP_COUNT=$(wc -l < "$DEP_LIST")
 
@@ -109,18 +119,24 @@ echo "==> 共解析出 ${DEP_COUNT} 个包，开始下载..."
 
 SUCCESS=0
 FAILED=0
+CURRENT=0
 while read -r dep; do
     [ -z "$dep" ] && continue
+    CURRENT=$((CURRENT + 1))
+    PERCENT=$((CURRENT * 100 / DEP_COUNT))
+    FILLED=$((PERCENT / 2))
+    BAR=$(printf '%0.s#' $(seq 1 $FILLED))$(printf '%0.s-' $(seq 1 $((50 - FILLED))))
+    printf "\r  [%s] %3d%% (%d/%d) 正在下载: %-40s" "$BAR" "$PERCENT" "$CURRENT" "$DEP_COUNT" "$dep"
     if apt-get download "${dep}:${ARCH}" >/dev/null 2>&1; then
         SUCCESS=$((SUCCESS + 1))
     elif apt-get download "${dep}" >/dev/null 2>&1; then
-        # 处理 Architecture: all 的包（noarch）
         SUCCESS=$((SUCCESS + 1))
     else
         echo "$dep" >> "$FAILED_LOG"
         FAILED=$((FAILED + 1))
     fi
 done < "$DEP_LIST"
+echo
 
 # ---------- 4. 总结 ----------
 echo
